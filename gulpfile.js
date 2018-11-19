@@ -262,7 +262,7 @@ function ESM_pluginStream(plugin, destinationPath) {
 
 					const myFileDestPath = path.join(DESTINATION, plugin.modulePrefix, data.relative);
 					const importFilePath = path.join(DESTINATION, importText.substr('monaco-editor-core/esm/'.length));
-					let relativePath = path.relative(path.dirname(myFileDestPath), importFilePath);
+					let relativePath = path.relative(path.dirname(myFileDestPath), importFilePath).replace(/\\/g, '/');
 					if (!/(^\.\/)|(^\.\.\/)/.test(relativePath)) {
 						relativePath = './' + relativePath;
 					}
@@ -286,7 +286,7 @@ function ESM_pluginStream(plugin, destinationPath) {
 
 			const myFileDestPath = path.join(DESTINATION, plugin.modulePrefix, data.relative);
 			const apiFilePath = path.join(DESTINATION, 'vs/editor/editor.api');
-			let relativePath = path.relative(path.dirname(myFileDestPath), apiFilePath);
+			let relativePath = path.relative(path.dirname(myFileDestPath), apiFilePath).replace(/\\/g, '/');
 			if (!/(^\.\/)|(^\.\.\/)/.test(relativePath)) {
 				relativePath = './' + relativePath;
 			}
@@ -360,7 +360,7 @@ function ESM_addPluginContribs(dest) {
 		metadata.METADATA.PLUGINS.forEach(function(plugin) {
 			const contribDestPath = path.join(DESTINATION, plugin.contrib);
 
-			let relativePath = path.relative(path.dirname(mainFileDestPath), contribDestPath);
+			let relativePath = path.relative(path.dirname(mainFileDestPath), contribDestPath).replace(/\\/g, '/');
 			if (!/(^\.\/)|(^\.\.\/)/.test(relativePath)) {
 				relativePath = './' + relativePath;
 			}
@@ -519,7 +519,7 @@ function addPluginThirdPartyNotices() {
 // --- website
 
 gulp.task('clean-website', function(cb) { rimraf('../monaco-editor-website', { maxBusyTries: 1 }, cb); });
-gulp.task('website', ['clean-website'], function() {
+gulp.task('build-website', ['clean-website'], function() {
 
 	const initialCWD = process.cwd();
 
@@ -653,26 +653,41 @@ gulp.task('website', ['clean-website'], function() {
 			});
 			fs.unlink('../monaco-editor-website/package.json');
 
-			cp.execSync('git init', {
-				cwd: path.join(__dirname, '../monaco-editor-website')
-			});
-			cp.execSync('git remote add origin https://github.com/Microsoft/monaco-editor.git', {
-				cwd: path.join(__dirname, '../monaco-editor-website')
-			});
-			cp.execSync('git checkout -b gh-pages', {
-				cwd: path.join(__dirname, '../monaco-editor-website')
-			});
-			cp.execSync('git add .', {
-				cwd: path.join(__dirname, '../monaco-editor-website')
-			});
-			cp.execSync('git commit -m "Publish website"', {
-				cwd: path.join(__dirname, '../monaco-editor-website')
-			});
-			console.log('RUN monaco-editor-website>git push origin gh-pages --force')
 			this.emit('end');
 		}))
 	);
 
+});
+
+gulp.task('website', ['build-website'], function() {
+	cp.execSync('git init', {
+		cwd: path.join(__dirname, '../monaco-editor-website')
+	});
+
+	let remoteUrl = cp.execSync('git remote get-url origin')
+	let committerUserName = cp.execSync('git log --format=\'%an\' -1');
+	let committerEmail = cp.execSync('git log --format=\'%ae\' -1');
+
+	cp.execSync(`git config user.name ${committerUserName}`, {
+		cwd: path.join(__dirname, '../monaco-editor-website')
+	});
+	cp.execSync(`git config user.email ${committerEmail}`, {
+		cwd: path.join(__dirname, '../monaco-editor-website')
+	});
+
+	cp.execSync(`git remote add origin ${remoteUrl}`, {
+		cwd: path.join(__dirname, '../monaco-editor-website')
+	});
+	cp.execSync('git checkout -b gh-pages', {
+		cwd: path.join(__dirname, '../monaco-editor-website')
+	});
+	cp.execSync('git add .', {
+		cwd: path.join(__dirname, '../monaco-editor-website')
+	});
+	cp.execSync('git commit -m "Publish website"', {
+		cwd: path.join(__dirname, '../monaco-editor-website')
+	});
+	console.log('RUN monaco-editor-website>git push origin gh-pages --force')
 });
 
 gulp.task('generate-test-samples', function() {

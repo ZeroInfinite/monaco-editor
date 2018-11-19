@@ -1,12 +1,16 @@
 # Monaco Editor
 
+[![Build Status](https://dev.azure.com/ms/monaco-editor/_apis/build/status/microsoft.monaco-editor?label=website)](https://dev.azure.com/ms/monaco-editor/_build/latest?definitionId=3)
+
 The Monaco Editor is the code editor which powers [VS Code](https://github.com/Microsoft/vscode), with the features better described [here](https://code.visualstudio.com/docs/editor/editingevolved).
+
+Please note that this repository contains no source code for the code editor, it only contains the scripts to package everything together and ship the `monaco-editor` npm module.
 
 ![image](https://cloud.githubusercontent.com/assets/5047891/19600675/5eaae9e6-97a6-11e6-97ad-93903167d8ba.png)
 
 ## Try it out
 
-See the editor in action [on the website](https://microsoft.github.io/monaco-editor/index.html).
+Try the editor out [on our website](https://microsoft.github.io/monaco-editor/index.html).
 
 ## Installing
 
@@ -93,4 +97,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 
 ## License
-[MIT](https://github.com/Microsoft/monaco-editor/blob/master/LICENSE.md)
+Licensed under the [MIT](https://github.com/Microsoft/monaco-editor/blob/master/LICENSE.md) License.
