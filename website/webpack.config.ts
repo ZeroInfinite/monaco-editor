@@ -7,8 +7,8 @@ import * as webpack from "webpack";
 import * as path from "path";
 import * as HtmlWebpackPlugin from "html-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 import * as CopyPlugin from "copy-webpack-plugin";
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const r = (file: string) => path.resolve(__dirname, file);
 
@@ -57,10 +57,7 @@ module.exports = {
 					"sass-loader",
 				],
 			},
-			{
-				test: /\.(jpe?g|png|gif|eot|ttf|svg|woff|woff2|md)$/i,
-				loader: "file-loader",
-			},
+
 			{
 				test: /\.tsx?$/,
 				loader: "ts-loader",
@@ -88,11 +85,6 @@ module.exports = {
 		new HtmlWebpackPlugin({
 			chunks: ["index"],
 			filename: "playground.html",
-			templateContent: getHtml(),
-		}),
-		new HtmlWebpackPlugin({
-			chunks: ["playgroundRunner"],
-			filename: "playgroundRunner.html",
 			templateContent: getHtml(),
 		}),
 		new HtmlWebpackPlugin({
@@ -130,9 +122,6 @@ module.exports = {
 					info: { minimized: true },
 				},
 			],
-		}),
-		new CopyPlugin({
-			patterns: [{ from: "../out/languages/", to: "./out/languages/" }],
 		}),
 	],
 } as webpack.Configuration;

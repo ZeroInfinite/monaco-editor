@@ -21,7 +21,7 @@ parameters:
     type: boolean
     default: false
   - name: publishMonacoEditor
-    displayName: 🚀 Publish Editor Core
+    displayName: 🚀 Publish Monaco Editor
     type: boolean
     default: false
   - name: publishWebpackPlugin
@@ -32,18 +32,28 @@ parameters:
 extends:
   template: azure-pipelines/npm-package/pipeline.yml@templates
   parameters:
+    cgIgnoreDirectories: $(Build.SourcesDirectory)/dependencies/vscode
     npmPackages:
       - name: monaco-editor-core
         workingDirectory: $(Build.SourcesDirectory)/dependencies/vscode/out-monaco-editor-core
         testPlatforms: []
+        skipAPIScan: true # package build requires Linux
         buildSteps:
+          - task: NodeTool@0
+            inputs:
+              versionSource: fromFile
+              versionFilePath: .nvmrc
+
           - script: sudo apt install -y libkrb5-dev
             displayName: Install libkrb5-dev
 
           - script: npm ci
             displayName: Install NPM dependencies
 
-          - script: yarn ts-node ./scripts/ci/monaco-editor-core-prepare stable
+          - script: npx playwright install --with-deps
+            displayName: Install Playwright Dependencies
+
+          - script: yarn ts-node ./scripts/ci/build-monaco-editor-core-pkg stable
             displayName: Setup, Build & Test monaco-editor-core
 
         tag: latest
@@ -52,13 +62,23 @@ extends:
         publishRequiresApproval: false
 
       - name: monaco-editor
+        dependsOn: monaco-editor-core
         workingDirectory: $(Build.SourcesDirectory)/out/monaco-editor
         testPlatforms: []
+        skipAPIScan: true # package build requires Linux
         buildSteps:
+          - task: NodeTool@0
+            inputs:
+              versionSource: fromFile
+              versionFilePath: .nvmrc
+
           - script: npm ci
             displayName: Install NPM dependencies
 
-          - script: yarn ts-node ./scripts/ci/monaco-editor-prepare stable
+          - script: npx playwright install --with-deps
+            displayName: Install Playwright Dependencies
+
+          - script: yarn ts-node ./scripts/ci/build-monaco-editor-pkg stable
             displayName: Setup, Build & Test monaco-editor
 
         tag: latest
@@ -66,8 +86,10 @@ extends:
         publishRequiresApproval: false
 
       - name: monaco-editor-webpack-plugin
+        dependsOn: monaco-editor
         workingDirectory: $(Build.SourcesDirectory)/webpack-plugin
         testPlatforms: []
+        packagePlatform: Windows
         buildSteps:
           - script: npm ci
             displayName: Install NPM dependencies

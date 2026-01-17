@@ -42,7 +42,12 @@ export class SettingsModel {
 	}
 
 	constructor() {
-		const settingsStr = localStorage.getItem(this.settingsKey);
+		const settingsStr = "";
+		try {
+			localStorage.getItem(this.settingsKey);
+		} catch (e) {
+			console.error("Failed to load settings from localStorage", e);
+		}
 		if (settingsStr) {
 			this._settings = JSON.parse(settingsStr);
 		} else {
@@ -54,7 +59,11 @@ export class SettingsModel {
 	setSettings(settings: Settings): void {
 		const settingsJson = JSON.stringify(toJS(settings));
 		this._settings = JSON.parse(settingsJson);
-		localStorage.setItem(this.settingsKey, settingsJson);
+		try {
+			localStorage.setItem(this.settingsKey, settingsJson);
+		} catch (e) {
+			console.error("Failed to save settings to localStorage", e);
+		}
 	}
 }
 
@@ -79,6 +88,8 @@ export interface Settings {
 
 	previewFullScreen: boolean;
 	autoReload: boolean | undefined;
+
+	language?: string;
 }
 
 export type JsonString<T> = string;
@@ -88,14 +99,18 @@ export function toLoaderConfig(settings: Settings): IMonacoSetup {
 		case "latest":
 			return {
 				...getMonacoSetup(
-					`node_modules/monaco-editor/${settings.latestStability}/vs`
+					`node_modules/monaco-editor/${settings.latestStability}/vs`,
+					settings.language
 				),
 				monacoTypesUrl: "node_modules/monaco-editor/monaco.d.ts",
 			};
 		case "npm":
 			const url = `https://cdn.jsdelivr.net/npm/monaco-editor@${settings.npmVersion}`;
 			return {
-				...getMonacoSetup(`${url}/${settings.npmStability}/vs`),
+				...getMonacoSetup(
+					`${url}/${settings.npmStability}/vs`,
+					settings.language
+				),
 				monacoTypesUrl: `${url}/monaco.d.ts`,
 			};
 		case "custom":
@@ -121,6 +136,13 @@ export function toLoaderConfig(settings: Settings): IMonacoSetup {
 					break;
 			}
 
+			if (coreUrl.endsWith('?esm')) {
+				return {
+					esmUrl: coreUrl,
+					monacoTypesUrl: undefined,
+				}
+			}
+
 			let languagesUrl: string;
 			switch (settings.languagesSource) {
 				case "latest":
@@ -134,7 +156,7 @@ export function toLoaderConfig(settings: Settings): IMonacoSetup {
 					break;
 			}
 
-			const setup = { ...getMonacoSetup(coreUrl) };
+			const setup = { ...getMonacoSetup(coreUrl, settings.language) };
 			if (
 				!setup.monacoTypesUrl &&
 				setup.loaderConfigPaths["vs"] &&
@@ -147,7 +169,6 @@ export function toLoaderConfig(settings: Settings): IMonacoSetup {
 			}
 
 			Object.assign(setup.loaderConfigPaths, {
-				"vs/fillers/monaco-editor-core": `${root}/out/languages/amd-tsc/fillers/monaco-editor-core-amd`,
 				"vs/language": `${languagesUrl}/language`,
 				"vs/basic-language": `${languagesUrl}/basic-language`,
 			});
@@ -177,6 +198,7 @@ export function getDefaultSettings(): Settings {
 		}),
 		previewFullScreen: false,
 		autoReload: true,
+		language: undefined,
 	};
 	return defaultSettings;
 }
